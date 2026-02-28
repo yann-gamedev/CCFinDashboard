@@ -1,74 +1,71 @@
 <script setup lang="ts">
-import { useFinanceStore } from './stores/finance'
-import TransactionForm from './components/TransactionForm.vue'
-import TransactionList from './components/TransactionList.vue'
+import { RouterLink, RouterView, useRoute } from 'vue-router'
+import { computed } from 'vue'
 
-const financeStore = useFinanceStore()
+const route = useRoute()
 
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0
-  }).format(value)
-}
+const navItems = [
+  { label: 'Dashboard', to: '/dashboard', icon: '📊' },
+  { label: 'Transaksi', to: '/transactions', icon: '💳' },
+]
+
+const isActive = (path: string) => computed(() => route.path === path)
 </script>
 
 <template>
   <div class="min-h-screen bg-gray-50 flex">
-    
-    <aside class="w-64 bg-slate-900 text-white p-6 hidden md:block">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-900 text-white p-6 hidden md:flex flex-col">
       <h2 class="text-2xl font-bold mb-8 italic">CCFin.</h2>
-      <nav class="space-y-4">
-        <a href="#" class="block p-3 bg-blue-600 rounded-lg">Dashboard</a>
-        <a href="#" class="block p-3 hover:bg-slate-800 rounded-lg text-gray-400">Transaksi</a>
-        <a href="#" class="block p-3 hover:bg-slate-800 rounded-lg text-gray-400">Market Kripto</a>
+      <nav class="space-y-2 flex-1">
+        <RouterLink
+          v-for="item in navItems"
+          :key="item.to"
+          :to="item.to"
+          :class="[
+            'flex items-center gap-3 p-3 rounded-lg transition-all duration-200 text-sm font-medium',
+            isActive(item.to).value
+              ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+              : 'text-gray-400 hover:bg-slate-800 hover:text-white',
+          ]"
+        >
+          <span>{{ item.icon }}</span>
+          <span>{{ item.label }}</span>
+        </RouterLink>
       </nav>
+      <div class="text-xs text-slate-500 pt-4 border-t border-slate-700">
+        <p>CCFin v1.0</p>
+      </div>
     </aside>
 
-    
-    <main class="flex-1 p-4 md:p-8">
-      <header class="flex justify-between items-center mb-8">
-        <div>
-          <h1 class="text-2xl font-bold text-slate-800">Dashboard Keuangan</h1>
-          <p class="text-slate-500 text-sm">Pantau arus kas kamu secara real-time.</p>
-        </div>
-        <div class="bg-white p-2 rounded-full shadow-sm">
-          <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
-            C
-          </div>
-        </div>
-      </header>
+    <!-- Mobile Header -->
+    <div class="md:hidden fixed top-0 left-0 right-0 z-50 bg-slate-900 text-white px-4 py-3 flex items-center justify-between">
+      <h2 class="text-lg font-bold italic">CCFin.</h2>
+      <nav class="flex gap-2">
+        <RouterLink
+          v-for="item in navItems"
+          :key="item.to"
+          :to="item.to"
+          :class="[
+            'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
+            isActive(item.to).value
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-400 hover:text-white',
+          ]"
+        >
+          {{ item.label }}
+        </RouterLink>
+      </nav>
+    </div>
 
-      
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-          <p class="text-sm text-slate-500 font-medium">Total Saldo</p>
-          <p class="text-2xl font-bold text-slate-800 mt-1">{{ formatCurrency(financeStore.balance) }}</p>
-        </div>
-        
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-          <p class="text-sm text-green-600 font-medium italic">Pemasukan</p>
-          <p class="text-2xl font-bold text-slate-800 mt-1">{{ formatCurrency(financeStore.totalIncome) }}</p>
-        </div>
-
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-          <p class="text-sm text-red-500 font-medium italic">Pengeluaran</p>
-          <p class="text-2xl font-bold text-slate-800 mt-1 text-red-500">{{ formatCurrency(financeStore.totalExpense) }}</p>
-        </div>
-      </div>
-
-      
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <TransactionForm />
-        <TransactionList />
-      </div>
+    <!-- Main Content -->
+    <main class="flex-1 p-4 md:p-8 md:mt-0 mt-14">
+      <RouterView />
     </main>
   </div>
 </template>
 
 <style>
-
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 body {
