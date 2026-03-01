@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useThemeStore } from '../stores/theme'
 import { Doughnut, Bar } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -15,6 +16,7 @@ import { useFinanceStore } from '../stores/finance'
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement)
 
 const financeStore = useFinanceStore()
+const themeStore = useThemeStore()
 
 const hasData = computed(() => financeStore.transactions.length > 0)
 
@@ -39,6 +41,7 @@ const doughnutOptions = {
         padding: 20,
         usePointStyle: true,
         font: { family: 'Plus Jakarta Sans', size: 12 },
+        color: themeStore.isDark ? '#94a3b8' : '#64748b',
       },
     },
   },
@@ -92,6 +95,7 @@ const barOptions = {
         padding: 20,
         usePointStyle: true,
         font: { family: 'Plus Jakarta Sans', size: 12 },
+        color: themeStore.isDark ? '#94a3b8' : '#64748b',
       },
     },
   },
@@ -101,7 +105,7 @@ const barOptions = {
       ticks: { font: { family: 'Plus Jakarta Sans', size: 11 } },
     },
     y: {
-      grid: { color: '#f1f5f9' },
+      grid: { color: themeStore.isDark ? '#334155' : '#f1f5f9' },
       ticks: {
         font: { family: 'Plus Jakarta Sans', size: 11 },
         callback: (value: number | string) => {
@@ -117,17 +121,17 @@ const barOptions = {
 </script>
 
 <template>
-  <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-    <h3 class="text-lg font-bold text-slate-800 mb-4">Analitik</h3>
+  <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+    <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-4">Analitik</h3>
 
-    <div v-if="!hasData" class="h-[250px] flex items-center justify-center text-slate-400 text-sm">
+    <div v-if="!hasData" class="h-[250px] flex items-center justify-center text-slate-400 dark:text-slate-500 text-sm">
       <p>Tambahkan transaksi untuk melihat grafik.</p>
     </div>
 
     <div v-else class="space-y-8">
       <!-- Doughnut Chart -->
       <div>
-        <p class="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-wider">Pemasukan vs Pengeluaran</p>
+        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-3 uppercase tracking-wider">Pemasukan vs Pengeluaran</p>
         <div class="h-[200px]">
           <Doughnut :data="doughnutData" :options="doughnutOptions" />
         </div>
@@ -135,7 +139,7 @@ const barOptions = {
 
       <!-- Bar Chart -->
       <div>
-        <p class="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-wider">Per Kategori</p>
+        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-3 uppercase tracking-wider">Per Kategori</p>
         <div class="h-[200px]">
           <Bar :data="barData" :options="barOptions" />
         </div>
