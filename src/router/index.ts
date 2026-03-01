@@ -22,7 +22,13 @@ const router = createRouter({
       name: 'crypto',
       component: () => import('../views/CryptoView.vue'),
     },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: () => import('../views/NotFoundView.vue'),
+    },
   ],
 })
 
 export default router
+

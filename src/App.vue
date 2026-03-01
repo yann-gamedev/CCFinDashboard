@@ -2,6 +2,7 @@
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { computed } from 'vue'
 import { useThemeStore } from './stores/theme'
+import ToastContainer from './components/ToastContainer.vue'
 
 const route = useRoute()
 const themeStore = useThemeStore()
@@ -17,6 +18,7 @@ const isActive = (path: string) => computed(() => route.path === path)
 
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-slate-950 flex transition-colors duration-300">
+    <ToastContainer />
     <!-- Sidebar -->
     <aside class="w-64 bg-slate-900 dark:bg-slate-950 text-white p-6 hidden md:flex flex-col border-r border-slate-800">
       <h2 class="text-2xl font-bold mb-8 italic bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">CCFin.</h2>

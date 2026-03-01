@@ -1,24 +1,29 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useFinanceStore } from '../stores/finance'
+import { useToast } from '../composables/useToast'
+import { CATEGORIES } from '../constants/categories'
 import TransactionForm from '../components/TransactionForm.vue'
 import TransactionList from '../components/TransactionList.vue'
 
 const financeStore = useFinanceStore()
+const toast = useToast()
 
 // Filters
 const searchQuery = ref('')
 const filterType = ref<'' | 'income' | 'expense'>('')
 const filterCategory = ref('')
-
-const categories = ['Makanan', 'Transportasi', 'Hiburan', 'Gaji', 'Tagihan', 'Lainnya']
+const dateFrom = ref('')
+const dateTo = ref('')
 
 const filteredTransactions = computed(() => {
   return financeStore.transactions.filter(t => {
     const matchSearch = !searchQuery.value || t.title.toLowerCase().includes(searchQuery.value.toLowerCase())
     const matchType = !filterType.value || t.type === filterType.value
     const matchCategory = !filterCategory.value || t.category === filterCategory.value
-    return matchSearch && matchType && matchCategory
+    const matchDateFrom = !dateFrom.value || t.date >= dateFrom.value
+    const matchDateTo = !dateTo.value || t.date <= dateTo.value
+    return matchSearch && matchType && matchCategory && matchDateFrom && matchDateTo
   })
 })
 
@@ -26,32 +31,40 @@ const clearFilters = () => {
   searchQuery.value = ''
   filterType.value = ''
   filterCategory.value = ''
+  dateFrom.value = ''
+  dateTo.value = ''
 }
 
-const hasActiveFilters = computed(() => searchQuery.value || filterType.value || filterCategory.value)
+const hasActiveFilters = computed(() =>
+  searchQuery.value || filterType.value || filterCategory.value || dateFrom.value || dateTo.value
+)
 
-// CSV Export
+// CSV Export (with proper escaping)
 const exportCSV = () => {
   const data = hasActiveFilters.value ? filteredTransactions.value : financeStore.transactions
   if (data.length === 0) return
 
+  const escapeCSV = (val: string) => `"${val.replace(/"/g, '""')}"`
+
   const headers = ['Tanggal', 'Judul', 'Kategori', 'Tipe', 'Nominal']
   const rows = data.map(t => [
     t.date,
-    `"${t.title}"`,
-    t.category,
+    escapeCSV(t.title),
+    escapeCSV(t.category),
     t.type === 'income' ? 'Pemasukan' : 'Pengeluaran',
     t.amount.toString()
   ])
 
   const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
   link.download = `ccfin-transaksi-${new Date().toISOString().split('T')[0]}.csv`
   link.click()
   URL.revokeObjectURL(url)
+
+  toast.success(`${data.length} transaksi berhasil di-export!`)
 }
 </script>
 
@@ -76,7 +89,7 @@ const exportCSV = () => {
     <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 mb-6">
       <div class="flex flex-wrap gap-3 items-center">
         <!-- Search -->
-        <div class="flex-1 min-w-[200px]">
+        <div class="flex-1 min-w-[180px]">
           <input v-model="searchQuery" type="text" placeholder="🔍 Cari transaksi..."
                  class="w-full p-2.5 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
         </div>
@@ -91,13 +104,22 @@ const exportCSV = () => {
         <select v-model="filterCategory"
                 class="p-2.5 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option value="">Semua Kategori</option>
-          <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+          <option v-for="cat in CATEGORIES" :key="cat" :value="cat">{{ cat }}</option>
         </select>
         <!-- Clear Filters -->
         <button v-if="hasActiveFilters" @click="clearFilters"
                 class="px-3 py-2.5 text-sm text-red-500 hover:text-red-700 dark:hover:text-red-400 font-medium transition-colors">
           ✕ Reset
         </button>
+      </div>
+      <!-- Date Range -->
+      <div class="flex flex-wrap gap-3 items-center mt-3">
+        <label class="text-xs text-slate-500 dark:text-slate-400 font-medium">Dari:</label>
+        <input v-model="dateFrom" type="date"
+               class="p-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <label class="text-xs text-slate-500 dark:text-slate-400 font-medium">Sampai:</label>
+        <input v-model="dateTo" type="date"
+               class="p-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
       </div>
       <p v-if="hasActiveFilters" class="text-xs text-slate-400 dark:text-slate-500 mt-2">
         Menampilkan {{ filteredTransactions.length }} dari {{ financeStore.transactions.length }} transaksi

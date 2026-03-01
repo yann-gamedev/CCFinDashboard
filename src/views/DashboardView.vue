@@ -1,19 +1,21 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useFinanceStore } from '../stores/finance'
+import { formatCurrency } from '../utils/format'
 import AnalyticsChart from '../components/AnalyticsChart.vue'
 import TransactionForm from '../components/TransactionForm.vue'
 import TransactionList from '../components/TransactionList.vue'
 import BudgetTracker from '../components/BudgetTracker.vue'
+import MonthlyTrendChart from '../components/MonthlyTrendChart.vue'
 
 const financeStore = useFinanceStore()
 
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0
-  }).format(value)
-}
+const greeting = computed(() => {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Selamat Pagi'
+  if (hour < 17) return 'Selamat Siang'
+  return 'Selamat Malam'
+})
 </script>
 
 <template>
@@ -21,12 +23,7 @@ const formatCurrency = (value: number) => {
     <header class="flex justify-between items-center mb-8">
       <div>
         <h1 class="text-2xl font-bold text-slate-800 dark:text-white">Dashboard Keuangan</h1>
-        <p class="text-slate-500 dark:text-slate-400 text-sm">Pantau arus kas kamu secara real-time.</p>
-      </div>
-      <div class="bg-white dark:bg-slate-800 p-2 rounded-full shadow-sm">
-        <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
-          C
-        </div>
+        <p class="text-slate-500 dark:text-slate-400 text-sm">{{ greeting }}! Pantau arus kas kamu secara real-time.</p>
       </div>
     </header>
 
@@ -46,6 +43,11 @@ const formatCurrency = (value: number) => {
         <p class="text-sm text-red-500 dark:text-red-400 font-medium italic">Pengeluaran</p>
         <p class="text-2xl font-bold text-red-500 dark:text-red-400 mt-1">{{ formatCurrency(financeStore.totalExpense) }}</p>
       </div>
+    </div>
+
+    <!-- Monthly Trend Chart -->
+    <div class="mb-8">
+      <MonthlyTrendChart />
     </div>
 
     <!-- Charts & Form -->

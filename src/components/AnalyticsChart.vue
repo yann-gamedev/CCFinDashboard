@@ -12,6 +12,7 @@ import {
   BarElement,
 } from 'chart.js'
 import { useFinanceStore } from '../stores/finance'
+import { formatCompactNumber } from '../utils/format'
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement)
 
@@ -31,7 +32,7 @@ const doughnutData = computed(() => ({
   }],
 }))
 
-const doughnutOptions = {
+const doughnutOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
@@ -46,9 +47,9 @@ const doughnutOptions = {
     },
   },
   cutout: '65%',
-}
+}))
 
-// Bar: Monthly spending by category
+// Bar: Spending by category
 const barData = computed(() => {
   const categoryMap = new Map<string, { income: number; expense: number }>()
   
@@ -85,7 +86,7 @@ const barData = computed(() => {
   }
 })
 
-const barOptions = {
+const barOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
@@ -102,22 +103,24 @@ const barOptions = {
   scales: {
     x: {
       grid: { display: false },
-      ticks: { font: { family: 'Plus Jakarta Sans', size: 11 } },
+      ticks: {
+        font: { family: 'Plus Jakarta Sans', size: 11 },
+        color: themeStore.isDark ? '#94a3b8' : '#64748b',
+      },
     },
     y: {
       grid: { color: themeStore.isDark ? '#334155' : '#f1f5f9' },
       ticks: {
         font: { family: 'Plus Jakarta Sans', size: 11 },
+        color: themeStore.isDark ? '#94a3b8' : '#64748b',
         callback: (value: number | string) => {
           const num = typeof value === 'string' ? parseFloat(value) : value
-          if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}jt`
-          if (num >= 1_000) return `${(num / 1_000).toFixed(0)}rb`
-          return value
+          return formatCompactNumber(num)
         },
       },
     },
   },
-}
+}))
 </script>
 
 <template>

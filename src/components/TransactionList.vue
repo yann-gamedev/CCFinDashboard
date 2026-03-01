@@ -1,35 +1,25 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useFinanceStore, type Transaction } from '../stores/finance'
+import { useToast } from '../composables/useToast'
+import { CATEGORIES } from '../constants/categories'
+import { formatCurrency, formatDate } from '../utils/format'
 
 const props = defineProps<{
   filteredTransactions?: Transaction[]
 }>()
 
 const financeStore = useFinanceStore()
+const toast = useToast()
 
 const editingId = ref<string | null>(null)
 const editForm = ref({ title: '', amount: 0, type: 'expense' as 'income' | 'expense', category: '', date: '' })
-
-const categories = ['Makanan', 'Transportasi', 'Hiburan', 'Gaji', 'Tagihan', 'Lainnya']
+const confirmDeleteId = ref<string | null>(null)
 
 const displayedTransactions = computed(() => {
   const source = props.filteredTransactions ?? financeStore.transactions
   return source.slice().reverse()
 })
-
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0
-  }).format(value)
-}
-
-const formatDate = (dateString: string) => {
-  const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' }
-  return new Date(dateString).toLocaleDateString('id-ID', options)
-}
 
 const startEdit = (trx: Transaction) => {
   editingId.value = trx.id
@@ -39,12 +29,29 @@ const startEdit = (trx: Transaction) => {
 const saveEdit = () => {
   if (editingId.value) {
     financeStore.editTransaction(editingId.value, editForm.value)
+    toast.success('Transaksi berhasil diperbarui!')
     editingId.value = null
   }
 }
 
 const cancelEdit = () => {
   editingId.value = null
+}
+
+const confirmDelete = (id: string) => {
+  confirmDeleteId.value = id
+}
+
+const executeDelete = () => {
+  if (confirmDeleteId.value) {
+    financeStore.deleteTransaction(confirmDeleteId.value)
+    toast.success('Transaksi berhasil dihapus.')
+    confirmDeleteId.value = null
+  }
+}
+
+const cancelDelete = () => {
+  confirmDeleteId.value = null
 }
 </script>
 
@@ -63,8 +70,21 @@ const cancelEdit = () => {
       <div v-for="trx in displayedTransactions" :key="trx.id"
            class="border border-slate-100 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
         
+        <!-- Delete Confirmation -->
+        <div v-if="confirmDeleteId === trx.id" class="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl flex items-center justify-between">
+          <p class="text-sm text-red-600 dark:text-red-400 font-medium">Hapus "{{ trx.title }}"?</p>
+          <div class="flex gap-2">
+            <button @click="executeDelete" class="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition-colors">
+              Ya, Hapus
+            </button>
+            <button @click="cancelDelete" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-medium hover:bg-slate-300 dark:hover:bg-slate-500 transition-colors">
+              Batal
+            </button>
+          </div>
+        </div>
+
         <!-- Edit Mode -->
-        <div v-if="editingId === trx.id" class="p-4 space-y-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border-blue-200 dark:border-blue-800">
+        <div v-else-if="editingId === trx.id" class="p-4 space-y-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border-blue-200 dark:border-blue-800">
           <div class="flex gap-2">
             <label class="flex items-center gap-1 text-xs cursor-pointer dark:text-slate-300">
               <input type="radio" v-model="editForm.type" value="expense" class="text-red-500">
@@ -82,7 +102,7 @@ const cancelEdit = () => {
                    class="p-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
             <select v-model="editForm.category"
                     class="p-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+              <option v-for="cat in CATEGORIES" :key="cat" :value="cat">{{ cat }}</option>
             </select>
             <input v-model="editForm.date" type="date"
                    class="p-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -127,7 +147,7 @@ const cancelEdit = () => {
               </svg>
             </button>
 
-            <button @click="financeStore.deleteTransaction(trx.id)"
+            <button @click="confirmDelete(trx.id)"
                     class="text-slate-400 hover:text-red-500 transition-colors"
                     title="Hapus Transaksi">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">

@@ -2,35 +2,37 @@
 import { ref, computed } from 'vue'
 import { useFinanceStore } from '../stores/finance'
 import { useBudgetStore } from '../stores/budget'
+import { CATEGORIES } from '../constants/categories'
+import { formatCurrency } from '../utils/format'
 
 const financeStore = useFinanceStore()
 const budgetStore = useBudgetStore()
 
-const categories = ['Makanan', 'Transportasi', 'Hiburan', 'Gaji', 'Tagihan', 'Lainnya']
-
 const selectedCategory = ref('')
 const budgetAmount = ref<number | null>(null)
 
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0
-  }).format(value)
+const getCurrentMonth = () => {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 }
 
-const getSpent = (category: string) => {
+const getMonthlySpent = (category: string) => {
+  const currentMonth = getCurrentMonth()
   return financeStore.transactions
-    .filter(t => t.type === 'expense' && t.category === category)
+    .filter(t => t.type === 'expense' && t.category === category && t.date.startsWith(currentMonth))
     .reduce((sum, t) => sum + t.amount, 0)
 }
 
 const budgetItems = computed(() => {
   return budgetStore.budgets.map(b => {
-    const spent = getSpent(b.category)
+    const spent = getMonthlySpent(b.category)
     const percentage = b.limit > 0 ? Math.min((spent / b.limit) * 100, 100) : 0
     return { ...b, spent, percentage, remaining: b.limit - spent }
   })
+})
+
+const currentMonthLabel = computed(() => {
+  return new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })
 })
 
 const addBudget = () => {
@@ -43,14 +45,17 @@ const addBudget = () => {
 
 <template>
   <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
-    <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-4">Anggaran Bulanan</h3>
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-bold text-slate-800 dark:text-white">Anggaran Bulanan</h3>
+      <span class="text-xs text-slate-400 dark:text-slate-500 font-medium">{{ currentMonthLabel }}</span>
+    </div>
 
     <!-- Add Budget Form -->
     <div class="flex gap-2 mb-6">
       <select v-model="selectedCategory"
               class="flex-1 p-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
         <option disabled value="">Pilih Kategori...</option>
-        <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+        <option v-for="cat in CATEGORIES" :key="cat" :value="cat">{{ cat }}</option>
       </select>
       <input v-model.number="budgetAmount" type="number" placeholder="Limit (Rp)"
              class="w-32 p-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">

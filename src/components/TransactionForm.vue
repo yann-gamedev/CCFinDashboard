@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useFinanceStore } from '../stores/finance'
+import { useToast } from '../composables/useToast'
+import { CATEGORIES } from '../constants/categories'
 
 const financeStore = useFinanceStore()
+const toast = useToast()
 
 const title = ref('')
 const amount = ref<number | null>(null)
@@ -10,22 +13,27 @@ const type = ref<'income' | 'expense'>('expense')
 const category = ref('')
 const date = ref(new Date().toISOString().split('T')[0])
 
-const categories = ['Makanan', 'Transportasi', 'Hiburan', 'Gaji', 'Tagihan', 'Lainnya']
-
 const submitTransaction = () => {
   if (!title.value || !amount.value || !category.value || !date.value) {
-    alert('Mohon lengkapi semua data!')
+    toast.warning('Mohon lengkapi semua data!')
+    return
+  }
+
+  if (amount.value <= 0) {
+    toast.warning('Nominal harus lebih dari 0!')
     return
   }
 
   financeStore.addTransaction({
     id: crypto.randomUUID(),
-    title: title.value,
+    title: title.value.trim(),
     amount: amount.value,
     type: type.value,
     category: category.value,
     date: date.value
   })
+
+  toast.success(`Transaksi "${title.value}" berhasil ditambahkan!`)
 
   title.value = ''
   amount.value = null
@@ -58,14 +66,14 @@ const submitTransaction = () => {
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Nominal (Rp)</label>
-          <input type="number" v-model="amount" placeholder="50000" 
+          <input type="number" v-model="amount" placeholder="50000" min="1"
                  class="w-full p-2.5 border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-slate-700 dark:text-white">
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Kategori</label>
           <select v-model="category" class="w-full p-2.5 border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-slate-700 dark:text-white">
             <option disabled value="">Pilih...</option>
-            <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+            <option v-for="cat in CATEGORIES" :key="cat" :value="cat">{{ cat }}</option>
           </select>
         </div>
       </div>
