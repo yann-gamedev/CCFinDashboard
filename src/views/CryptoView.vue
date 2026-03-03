@@ -17,6 +17,7 @@ const coins = ref<CoinData[]>([])
 const loading = ref(true)
 const error = ref('')
 let interval: ReturnType<typeof setInterval> | null = null
+let abortController: AbortController | null = null
 
 const formatUSD = (value: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -35,14 +36,19 @@ const formatMarketCap = (value: number) => {
 }
 
 const fetchCoins = async () => {
+  if (abortController) abortController.abort()
+  abortController = new AbortController()
+
   try {
     const res = await fetch(
-      'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1&sparkline=true&price_change_percentage=24h'
+      'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1&sparkline=true&price_change_percentage=24h',
+      { signal: abortController.signal }
     )
     if (!res.ok) throw new Error(`API Error: ${res.status}`)
     coins.value = await res.json()
     error.value = ''
   } catch (e) {
+    if (e instanceof DOMException && e.name === 'AbortError') return
     error.value = e instanceof Error ? e.message : 'Failed to fetch'
   } finally {
     loading.value = false
@@ -75,6 +81,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (interval) clearInterval(interval)
+  if (abortController) abortController.abort()
 })
 </script>
 
