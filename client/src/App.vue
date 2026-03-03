@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { RouterLink, RouterView, useRoute } from 'vue-router'
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { computed } from 'vue'
 import { useThemeStore } from './stores/theme'
+import { useAuthStore } from './stores/auth'
 import ToastContainer from './components/ToastContainer.vue'
 import ErrorBoundary from './components/ErrorBoundary.vue'
 
 const route = useRoute()
+const router = useRouter()
 const themeStore = useThemeStore()
+const authStore = useAuthStore()
 
 const navItems = [
   { label: 'Dashboard', to: '/dashboard', icon: '📊' },
@@ -16,10 +19,23 @@ const navItems = [
 ]
 
 const isActive = (path: string) => computed(() => route.path === path)
+const isAuthPage = computed(() => route.path === '/auth')
+
+const handleLogout = () => {
+  authStore.logout()
+  router.push('/auth')
+}
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-slate-950 flex transition-colors duration-300">
+  <!-- Auth Page: full-screen, no sidebar -->
+  <div v-if="isAuthPage">
+    <ToastContainer />
+    <RouterView />
+  </div>
+
+  <!-- Main App: sidebar + content -->
+  <div v-else class="min-h-screen bg-gray-50 dark:bg-slate-950 flex transition-colors duration-300">
     <ToastContainer />
 
     <!-- Desktop Sidebar -->
@@ -50,8 +66,26 @@ const isActive = (path: string) => computed(() => route.path === path)
         <span>{{ themeStore.isDark ? 'Light Mode' : 'Dark Mode' }}</span>
       </button>
 
-      <div class="text-xs text-slate-500 pt-4 border-t border-slate-700">
-        <p>CCFin v3.0</p>
+      <!-- User Info -->
+      <div class="pt-4 border-t border-slate-700 space-y-3">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+            {{ authStore.displayName?.charAt(0)?.toUpperCase() || '?' }}
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-white truncate">{{ authStore.displayName }}</p>
+            <p class="text-xs text-slate-400">{{ authStore.isAuthenticated ? 'Online' : 'Mode Tamu' }}</p>
+          </div>
+        </div>
+        <button v-if="authStore.isAuthenticated" @click="handleLogout"
+                class="w-full text-left text-xs text-slate-400 hover:text-red-400 transition-colors p-1">
+          🚪 Keluar
+        </button>
+        <RouterLink v-else-if="authStore.isGuest" to="/auth"
+                    class="block w-full text-left text-xs text-blue-400 hover:text-blue-300 transition-colors p-1">
+          🔐 Login / Daftar
+        </RouterLink>
+        <p class="text-xs text-slate-500">CCFin v3.0</p>
       </div>
     </aside>
 

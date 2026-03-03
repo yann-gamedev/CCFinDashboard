@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { useFinanceStore } from '../stores/finance'
 import { useRecurringStore } from '../stores/recurring'
+import { useAuthStore } from '../stores/auth'
+import { useSettingsStore } from '../stores/settings'
 import { useToast } from '../composables/useToast'
 import { useCountUp } from '../composables/useCountUp'
 import { formatCurrency } from '../utils/format'
@@ -14,13 +16,15 @@ import RecurringManager from '../components/RecurringManager.vue'
 
 const financeStore = useFinanceStore()
 const recurringStore = useRecurringStore()
+const authStore = useAuthStore()
+const settingsStore = useSettingsStore()
 const toast = useToast()
 
 const greeting = computed(() => {
   const hour = new Date().getHours()
-  if (hour < 12) return 'Selamat Pagi'
-  if (hour < 17) return 'Selamat Siang'
-  return 'Selamat Malam'
+  const name = settingsStore.settings.username || authStore.displayName
+  const timeGreeting = hour < 12 ? 'Selamat Pagi' : hour < 17 ? 'Selamat Siang' : 'Selamat Malam'
+  return name ? `${timeGreeting}, ${name}` : timeGreeting
 })
 
 // Animated counters
@@ -34,6 +38,17 @@ onMounted(() => {
   if (created > 0) {
     toast.info(`${created} transaksi berulang otomatis dibuat.`)
   }
+})
+
+// Auto-sync to cloud when data changes (debounced)
+let syncTimeout: ReturnType<typeof setTimeout> | null = null
+
+watch(() => financeStore.transactions.length, () => {
+  if (!authStore.isAuthenticated) return
+  if (syncTimeout) clearTimeout(syncTimeout)
+  syncTimeout = setTimeout(() => {
+    authStore.syncToCloud().catch(() => {})
+  }, 3000)
 })
 </script>
 
