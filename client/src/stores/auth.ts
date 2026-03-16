@@ -5,6 +5,32 @@ import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 const GUEST_KEY = 'ccfin-guest'
 
+// Map Supabase error messages to user-friendly Indonesian messages
+function translateAuthError(message: string): string {
+    const errorMap: Record<string, string> = {
+        'Invalid login credentials': 'Email atau password salah.',
+        'Email not confirmed': 'Email belum dikonfirmasi. Cek inbox kamu.',
+        'User already registered': 'Email sudah terdaftar. Silakan login.',
+        'Email rate limit exceeded': 'Terlalu banyak percobaan. Coba lagi dalam beberapa menit.',
+        'over_email_send_rate_limit': 'Terlalu banyak email terkirim. Tunggu beberapa menit lalu coba lagi.',
+        'Password should be at least 6 characters': 'Password minimal 6 karakter.',
+        'Unable to validate email address: invalid format': 'Format email tidak valid.',
+        'Signup requires a valid password': 'Password wajib diisi.',
+        'Anonymous sign-ins are disabled': 'Registrasi anonim dinonaktifkan.',
+    }
+
+    // Check for exact match first
+    if (errorMap[message]) return errorMap[message]
+
+    // Check for partial match (Supabase sometimes wraps error messages)
+    for (const [key, value] of Object.entries(errorMap)) {
+        if (message.toLowerCase().includes(key.toLowerCase())) return value
+    }
+
+    // Fallback: return original message
+    return message
+}
+
 export const useAuthStore = defineStore('auth', () => {
     const user = ref<SupabaseUser | null>(null)
     const isGuest = ref<boolean>(localStorage.getItem(GUEST_KEY) === 'true')
@@ -48,7 +74,7 @@ export const useAuthStore = defineStore('auth', () => {
             password,
         })
 
-        if (error) throw new Error(error.message === 'Invalid login credentials' ? 'Email atau password salah.' : error.message)
+        if (error) throw new Error(translateAuthError(error.message))
         return { message: 'Login berhasil!' }
     }
 
@@ -63,7 +89,7 @@ export const useAuthStore = defineStore('auth', () => {
             }
         })
 
-        if (error) throw new Error(error.message)
+        if (error) throw new Error(translateAuthError(error.message))
 
         // Automatically login after signup
         if (data.session) {
