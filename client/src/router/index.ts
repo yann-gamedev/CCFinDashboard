@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { supabase } from '../lib/supabase'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -43,13 +44,20 @@ const router = createRouter({
 })
 
 // Navigation guard
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   if (to.meta.public) return true
 
-  const token = localStorage.getItem('ccfin-token')
+  let session = null
+  try {
+    const { data } = await supabase.auth.getSession()
+    session = data.session
+  } catch (err) {
+    console.warn('Supabase session check failed:', err)
+  }
+
   const isGuest = localStorage.getItem('ccfin-guest') === 'true'
 
-  if (!token && !isGuest) {
+  if (!session && !isGuest) {
     return { name: 'auth' }
   }
 
