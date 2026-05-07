@@ -46,7 +46,7 @@ export const useRecurringStore = defineStore('recurring', () => {
 
     function processRecurring() {
         const financeStore = useFinanceStore()
-        const today = new Date().toISOString().split('T')[0]
+        const today = new Date().toISOString().split('T')[0]!
         let created = 0
 
         items.value.forEach(item => {
@@ -70,7 +70,7 @@ export const useRecurringStore = defineStore('recurring', () => {
                 } else {
                     d.setDate(d.getDate() + 7)
                 }
-                item.nextDate = d.toISOString().split('T')[0]
+                item.nextDate = d.toISOString().split('T')[0]!
             }
         })
 

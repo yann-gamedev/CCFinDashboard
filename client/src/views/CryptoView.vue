@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { RefreshCw, AlertTriangle } from 'lucide-vue-next'
 
 interface CoinData {
   id: string
@@ -93,8 +94,8 @@ onUnmounted(() => {
         <p class="text-slate-500 dark:text-slate-400 text-sm">Data harga dari CoinGecko, diperbarui setiap menit.</p>
       </div>
       <button @click="fetchCoins(); loading = true"
-              class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
-        🔄 Refresh
+              class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+        <RefreshCw class="w-4 h-4" :class="{ 'animate-spin': loading }" /> Refresh
       </button>
     </header>
 
@@ -104,8 +105,9 @@ onUnmounted(() => {
     </div>
 
     <!-- Error -->
-    <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-6 rounded-2xl text-center">
-      <p class="font-medium">⚠️ {{ error }}</p>
+    <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-6 rounded-2xl flex flex-col items-center text-center">
+      <AlertTriangle class="w-8 h-8 mb-2" />
+      <p class="font-medium">{{ error }}</p>
       <p class="text-sm mt-2 text-red-500">CoinGecko API may be rate-limited. Try again in a minute.</p>
     </div>
 

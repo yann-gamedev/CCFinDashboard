@@ -5,6 +5,7 @@ import { useToast } from '../composables/useToast'
 import { CATEGORIES } from '../constants/categories'
 import TransactionForm from '../components/TransactionForm.vue'
 import TransactionList from '../components/TransactionList.vue'
+import { Search, X, Download } from 'lucide-vue-next'
 
 const financeStore = useFinanceStore()
 const toast = useToast()
@@ -78,9 +79,7 @@ const exportCSV = () => {
       <button @click="exportCSV"
               :disabled="financeStore.transactions.length === 0"
               class="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
-        </svg>
+        <Download class="h-4 w-4" />
         Export CSV
       </button>
     </header>
@@ -89,9 +88,10 @@ const exportCSV = () => {
     <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 mb-6">
       <div class="flex flex-wrap gap-3 items-center">
         <!-- Search -->
-        <div class="flex-1 min-w-[180px]">
-          <input v-model="searchQuery" type="text" placeholder="🔍 Cari transaksi..."
-                 class="w-full p-2.5 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <div class="flex-1 min-w-[180px] relative">
+          <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <input v-model="searchQuery" type="text" placeholder="Cari transaksi..."
+                 class="w-full pl-9 pr-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
         </div>
         <!-- Type Filter -->
         <select v-model="filterType"
@@ -108,8 +108,8 @@ const exportCSV = () => {
         </select>
         <!-- Clear Filters -->
         <button v-if="hasActiveFilters" @click="clearFilters"
-                class="px-3 py-2.5 text-sm text-red-500 hover:text-red-700 dark:hover:text-red-400 font-medium transition-colors">
-          ✕ Reset
+                class="flex items-center gap-1 px-3 py-2.5 text-sm text-red-500 hover:text-red-700 dark:hover:text-red-400 font-medium transition-colors">
+          <X class="h-4 w-4" /> Reset
         </button>
       </div>
       <!-- Date Range -->

@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { useToast } from '../composables/useToast'
+import { Check, X, AlertTriangle, Info } from 'lucide-vue-next'
+import type { Component } from 'vue'
 
 const { toasts } = useToast()
 
@@ -10,11 +12,11 @@ const typeStyles: Record<string, string> = {
   info: 'bg-blue-500 text-white',
 }
 
-const typeIcons: Record<string, string> = {
-  success: '✓',
-  error: '✕',
-  warning: '⚠',
-  info: 'ℹ',
+const typeIcons: Record<string, Component> = {
+  success: Check,
+  error: X,
+  warning: AlertTriangle,
+  info: Info,
 }
 </script>
 
@@ -25,8 +27,8 @@ const typeIcons: Record<string, string> = {
         <div v-for="toast in toasts" :key="toast.id"
              :class="typeStyles[toast.type]"
              class="px-4 py-3 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2 pointer-events-auto min-w-[250px] max-w-[400px]">
-          <span class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-xs flex-shrink-0">
-            {{ typeIcons[toast.type] }}
+          <span class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+            <component :is="typeIcons[toast.type]" class="w-4 h-4" />
           </span>
           {{ toast.message }}
         </div>

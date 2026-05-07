@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useToast } from '../composables/useToast'
+import { Download, Upload, Trash2, AlertTriangle } from 'lucide-vue-next'
 
 const toast = useToast()
 
@@ -87,16 +88,12 @@ const clearAllData = () => {
     <div class="flex flex-wrap gap-3">
       <button @click="exportBackup"
               class="px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
-        </svg>
+        <Download class="h-4 w-4" />
         Export Backup
       </button>
       <button @click="importBackup"
               class="px-4 py-2.5 bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg text-sm font-medium hover:bg-slate-300 dark:hover:bg-slate-500 transition-colors flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-        </svg>
+        <Upload class="h-4 w-4" />
         Import Backup
       </button>
       <input ref="fileInput" type="file" accept=".json" @change="handleFileImport" class="hidden">
@@ -105,11 +102,13 @@ const clearAllData = () => {
     <!-- Clear All Data -->
     <div class="pt-4 border-t border-slate-200 dark:border-slate-700">
       <button v-if="!showClearDialog" @click="showClearDialog = true"
-              class="px-4 py-2.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors">
-        🗑️ Hapus Semua Data
+              class="flex items-center gap-2 px-4 py-2.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors">
+        <Trash2 class="w-4 h-4" /> Hapus Semua Data
       </button>
       <div v-else class="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl space-y-3">
-        <p class="text-sm text-red-600 dark:text-red-400 font-medium">⚠️ Ketik "HAPUS" untuk menghapus semua data secara permanen.</p>
+        <p class="flex items-center gap-2 text-sm text-red-600 dark:text-red-400 font-medium">
+          <AlertTriangle class="w-4 h-4" /> Ketik "HAPUS" untuk menghapus semua data secara permanen.
+        </p>
         <div class="flex gap-2">
           <input v-model="clearConfirm" type="text" placeholder='Ketik "HAPUS"'
                  class="flex-1 p-2 border border-red-300 dark:border-red-800 rounded-lg text-sm bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500">

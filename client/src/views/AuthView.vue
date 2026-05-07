@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useToast } from '../composables/useToast'
+import { Package, Check, User } from 'lucide-vue-next'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -34,8 +35,8 @@ const handleLogin = async () => {
   try {
     const res = await authStore.login(loginEmail.value, loginPassword.value)
     toast.success(res.message || 'Login berhasil!')
-    // Reload to refresh all stores with cloud data
-    window.location.href = '/dashboard'
+    // login() already loaded cloud data, just navigate
+    router.push('/dashboard')
   } catch (err) {
     toast.error(err instanceof Error ? err.message : 'Login gagal.')
   } finally {
@@ -64,12 +65,19 @@ const handleRegister = async () => {
     const res = await authStore.register(regUsername.value, regEmail.value, regPassword.value)
     toast.success(res.message || 'Registrasi berhasil!')
 
+    // If email confirmation is needed, stay on auth page
+    if (res.needsConfirmation) {
+      activeTab.value = 'login'
+      loading.value = false
+      return
+    }
+
     // Check if guest has existing data to migrate
     const existingTxn = JSON.parse(localStorage.getItem('ccfin-transactions') || '[]')
     if (existingTxn.length > 0) {
       showMigrateDialog.value = true
     } else {
-      window.location.href = '/dashboard'
+      router.push('/dashboard')
     }
   } catch (err) {
     toast.error(err instanceof Error ? err.message : 'Registrasi gagal.')
@@ -87,11 +95,11 @@ const migrateAndContinue = async () => {
     toast.warning('Gagal memindah data, tapi akun tetap dibuat.')
   }
   loading.value = false
-  window.location.href = '/dashboard'
+  router.push('/dashboard')
 }
 
 const skipMigrate = () => {
-  window.location.href = '/dashboard'
+  router.push('/dashboard')
 }
 
 const continueAsGuest = () => {
@@ -113,13 +121,14 @@ const continueAsGuest = () => {
       <!-- Migrate Dialog -->
       <div v-if="showMigrateDialog" class="bg-slate-800 rounded-2xl p-8 border border-slate-700 shadow-xl">
         <div class="text-center">
-          <p class="text-4xl mb-4">📦</p>
+          <Package class="w-12 h-12 text-blue-500 mx-auto mb-4" />
           <h3 class="text-lg font-bold text-white mb-2">Data Ditemukan!</h3>
           <p class="text-sm text-slate-400 mb-6">Kamu punya data transaksi di browser ini. Mau dipindahkan ke akunmu?</p>
           <div class="space-y-3">
             <button @click="migrateAndContinue" :disabled="loading"
                     class="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold text-sm hover:bg-blue-700 transition-colors disabled:opacity-50">
-              {{ loading ? 'Memindahkan...' : '✅ Ya, Pindahkan Data' }}
+              <span v-if="loading">Memindahkan...</span>
+              <span v-else class="flex items-center justify-center gap-2"><Check class="w-4 h-4" /> Ya, Pindahkan Data</span>
             </button>
             <button @click="skipMigrate"
                     class="w-full py-3 bg-slate-700 text-slate-300 rounded-xl font-semibold text-sm hover:bg-slate-600 transition-colors">
@@ -201,7 +210,7 @@ const continueAsGuest = () => {
         <!-- Guest Button -->
         <button @click="continueAsGuest"
                 class="w-full py-3 bg-slate-700 text-slate-300 rounded-xl font-semibold text-sm hover:bg-slate-600 transition-colors flex items-center justify-center gap-2">
-          <span>👤</span>
+          <User class="w-4 h-4" />
           <span>Lanjutkan sebagai Tamu</span>
         </button>
 

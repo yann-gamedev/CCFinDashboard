@@ -15,6 +15,13 @@ const router = createRouter({
       meta: { public: true },
     },
     {
+      // Handle Supabase email confirmation callback
+      path: '/auth/callback',
+      name: 'auth-callback',
+      meta: { public: true },
+      component: () => import('../views/AuthView.vue'),
+    },
+    {
       path: '/dashboard',
       name: 'dashboard',
       component: () => import('../views/DashboardView.vue'),
@@ -43,21 +50,30 @@ const router = createRouter({
   ],
 })
 
+// Cache the session check to avoid calling getSession() on every navigation
+let cachedSession: boolean | null = null
+
+supabase.auth.onAuthStateChange((_event, session) => {
+  cachedSession = !!session
+})
+
 // Navigation guard
 router.beforeEach(async (to) => {
   if (to.meta.public) return true
 
-  let session = null
-  try {
-    const { data } = await supabase.auth.getSession()
-    session = data.session
-  } catch (err) {
-    console.warn('Supabase session check failed:', err)
+  // First navigation: check session from Supabase
+  if (cachedSession === null) {
+    try {
+      const { data } = await supabase.auth.getSession()
+      cachedSession = !!data.session
+    } catch {
+      cachedSession = false
+    }
   }
 
   const isGuest = localStorage.getItem('ccfin-guest') === 'true'
 
-  if (!session && !isGuest) {
+  if (!cachedSession && !isGuest) {
     return { name: 'auth' }
   }
 
@@ -65,3 +81,4 @@ router.beforeEach(async (to) => {
 })
 
 export default router
+

@@ -5,41 +5,41 @@
 **Pantau pemasukan, pengeluaran, anggaran, dan market kripto secara real-time.**
 
 ![Vue.js](https://img.shields.io/badge/Vue.js-3.5-4FC08D?logo=vuedotjs&logoColor=white)
-![Express](https://img.shields.io/badge/Express-4.21-000000?logo=express&logoColor=white)
-![MongoDB](https://img.shields.io/badge/MongoDB-8.12-47A248?logo=mongodb&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-DB-3ECF8E?logo=supabase&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.2-38B2AC?logo=tailwindcss&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-blue)
 
 </div>
 
 ---
 
-## ✨ Fitur
+## Fitur
 
-### 💰 Keuangan
+### Keuangan
 - **Dashboard** — Ringkasan saldo, pemasukan, pengeluaran dengan animasi count-up
 - **Transaksi CRUD** — Tambah, edit, hapus dengan konfirmasi inline
 - **Kategori** — Makanan, Transportasi, Hiburan, Gaji, Tagihan, Belanja, Investasi
 - **Anggaran Bulanan** — Set limit per kategori, progress bar otomatis
 - **Transaksi Berulang** — Otomatis buat tagihan bulanan/mingguan (sewa, langganan)
-- **Export CSV** — Download semua transaksi ke file `.csv`
+- **Input Nominal Lanjut** — Menggunakan Thousand Separator untuk angka nominal yang lebih rapi
+- **Export CSV** — Download semua transaksi ke file .csv
 - **Filter & Pencarian** — Cari by judul, filter by tipe/kategori/tanggal
 
-### 📊 Visualisasi
+### Visualisasi
 - **Tren Bulanan** — Line chart pemasukan vs pengeluaran
 - **Analitik** — Doughnut chart (income vs expense) + bar chart per kategori
 - **Market Kripto** — 20 koin teratas dari CoinGecko dengan sparkline 7 hari
 
-### 👤 Akun & Data
+### Akun & Data
 - **3 Mode Pengguna:**
-  - 🔐 **Login** — Data disimpan di cloud (MongoDB)
-  - 📝 **Register** — Buat akun baru, migrasi data tamu otomatis
-  - 👤 **Tamu** — Langsung pakai, data di browser (localStorage)
+  - **Login** — Data disimpan di cloud database (Supabase) dengan arsitektur isolasi data
+  - **Register** — Buat akun baru, migrasi data tamu otomatis jika ada
+  - **Tamu** — Langsung pakai, data di browser (localStorage)
 - **Backup & Restore** — Export/import semua data sebagai file JSON
-- **Hapus Data** — Konfirmasi "ketik HAPUS" untuk keamanan
-- **Sinkronisasi Cloud** — Otomatis sync ke database saat login (debounced 3s)
+- **Hapus Data** — Konfirmasi keamanan sebelum menghapus semua data
+- **Sinkronisasi Cloud** — Otomatis tersinkronisasi ke Supabase saat digunakan
 
-### 🎨 Tampilan
+### Tampilan
+- **Ikon Rapi** — Seluruh antarmuka menggunakan library profesional lucide-vue-next (bebas emoji)
 - **Dark/Light Mode** — Toggle theme dengan transisi halus
 - **Animasi** — Page transitions, staggered card entrance, count-up numbers
 - **Responsive** — Desktop sidebar + mobile bottom tab bar
@@ -47,25 +47,24 @@
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Teknologi |
 |-------|-----------|
 | Frontend | Vue 3, Pinia, Vue Router, TypeScript |
 | Styling | Tailwind CSS v4, Plus Jakarta Sans font |
 | Charts | Chart.js + vue-chartjs |
-| Backend | Node.js, Express |
-| Database | MongoDB + Mongoose |
-| Auth | JWT (jsonwebtoken) + bcrypt |
+| Icons | lucide-vue-next |
+| Backend & DB | Supabase (PostgreSQL, Auth) |
 | Build | Vite 7 |
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
-- Node.js ≥ 20
-- MongoDB Atlas account (gratis) atau MongoDB lokal
+- Node.js >= 20
+- Proyek Supabase (Database & Auth)
 
 ### 1. Clone
 ```bash
@@ -73,119 +72,58 @@ git clone https://github.com/yann-gamedev/CCFinDashboard.git
 cd CCFinDashboard
 ```
 
-### 2. Setup Backend
+### 2. Setup Supabase
+- Buka dashboard Supabase dan jalankan seluruh query SQL dari file `supabase-setup.sql` yang ada di direktori root.
+- Buka Authentication -> Providers -> Email -> matikan "Confirm email" jika ingin melakukan testing secara instan.
+
+### 3. Setup Frontend Client
 ```bash
-cd server
+cd client
 npm install
 ```
 
-Buat file `.env` di folder `server/`:
+Buat file `.env.local` di folder `client/`:
 ```env
-MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/ccfin?retryWrites=true&w=majority
-JWT_SECRET=ganti_dengan_secret_key_kamu
-PORT=5000
-NODE_ENV=development
-CLIENT_URL=http://localhost:5173
+VITE_SUPABASE_URL=https://<your_supabase_project_domain>.supabase.co
+VITE_SUPABASE_ANON_KEY=<your_supabase_anon_key>
 ```
 
-> **⚠️ Penting:** Pastikan IP kamu sudah di-whitelist di MongoDB Atlas → Network Access → Add IP Address → Allow Access from Anywhere.
-
-Start server:
+Start server lokal:
 ```bash
 npm run dev
 ```
 
-### 3. Setup Frontend
-```bash
-cd ../client
-npm install
-npx vite --port 5173
-```
-
 ### 4. Buka App
-Buka [http://localhost:5173](http://localhost:5173) — pilih Login, Register, atau lanjut sebagai Tamu.
+Buka http://localhost:5173 — pilih Login, Register, atau lanjut sebagai Tamu.
 
 ---
 
-## 📁 Struktur Proyek
+## Struktur Proyek
 
-```
+```text
 CCFinDashboard/
 ├── client/                      # Frontend (Vue 3)
 │   ├── src/
+│   │   ├── assets/              # CSS Styles
 │   │   ├── components/          # UI Components
-│   │   │   ├── AnalyticsChart.vue
-│   │   │   ├── BudgetTracker.vue
-│   │   │   ├── DataManager.vue
-│   │   │   ├── ErrorBoundary.vue
-│   │   │   ├── MonthlyTrendChart.vue
-│   │   │   ├── RecurringManager.vue
-│   │   │   ├── SkeletonLoader.vue
-│   │   │   ├── ToastContainer.vue
-│   │   │   ├── TransactionForm.vue
-│   │   │   └── TransactionList.vue
-│   │   ├── composables/         # Reusable logic
-│   │   │   ├── useApi.ts
-│   │   │   ├── useCountUp.ts
-│   │   │   └── useToast.ts
-│   │   ├── constants/
-│   │   │   └── categories.ts
-│   │   ├── stores/              # Pinia State
-│   │   │   ├── auth.ts
-│   │   │   ├── budget.ts
-│   │   │   ├── finance.ts
-│   │   │   ├── recurring.ts
-│   │   │   ├── settings.ts
-│   │   │   └── theme.ts
-│   │   ├── utils/
-│   │   │   └── format.ts
-│   │   ├── views/               # Pages
-│   │   │   ├── AuthView.vue
-│   │   │   ├── CryptoView.vue
-│   │   │   ├── DashboardView.vue
-│   │   │   ├── NotFoundView.vue
-│   │   │   ├── SettingsView.vue
-│   │   │   └── TransactionsView.vue
+│   │   ├── composables/         # Reusable logic (useCurrencyInput, dll)
+│   │   ├── lib/                 # Konfigurasi Supabase Client
+│   │   ├── stores/              # Pinia State Management
+│   │   ├── utils/               # Formatting utilities
+│   │   ├── views/               # Pages & Routing views
 │   │   ├── router/index.ts
 │   │   ├── App.vue
 │   │   └── main.ts
+│   ├── .env.local               # Environment Variables
 │   └── package.json
-│
-├── server/                      # Backend (Express)
-│   ├── controllers/
-│   │   ├── authController.js
-│   │   └── dataController.js
-│   ├── middleware/
-│   │   └── auth.js
-│   ├── models/
-│   │   ├── User.js
-│   │   └── UserData.js
-│   ├── routes/
-│   │   ├── auth.js
-│   │   └── data.js
-│   ├── index.js
-│   └── package.json
-│
+├── supabase-setup.sql           # Database Initialization Query
+├── package.json                 # Global scripts
 └── README.md
 ```
 
 ---
 
-## 🔌 API Endpoints
-
-| Method | Endpoint | Auth | Deskripsi |
-|--------|----------|------|-----------|
-| POST | `/api/auth/register` | ❌ | Buat akun baru |
-| POST | `/api/auth/login` | ❌ | Login, dapat JWT + data |
-| GET | `/api/auth/profile` | ✅ | Info user |
-| GET | `/api/data` | ✅ | Ambil semua data user |
-| PUT | `/api/data` | ✅ | Simpan data user |
-| POST | `/api/data/merge` | ✅ | Gabung data tamu ke akun |
-| GET | `/api/health` | ❌ | Status server + database |
-
----
-
-## 📱 Halaman
+## Halaman
 
 | Halaman | Path | Deskripsi |
 |---------|------|-----------|
@@ -197,17 +135,10 @@ CCFinDashboard/
 
 ---
 
-## 🔒 Keamanan
+## Keamanan & Reliabilitas
 
-- Password di-hash dengan **bcrypt** (12 rounds)
-- JWT token berlaku **7 hari**
-- `.env` tidak ikut di-commit (ada di `.gitignore`)
-- Konfirmasi ketik "HAPUS" sebelum menghapus semua data
-- CSV export dengan escaping karakter khusus
-- CORS dibatasi sesuai `CLIENT_URL`
-
----
-
-## 📄 License
-
-MIT © [yann-gamedev](https://github.com/yann-gamedev)
+- Otentikasi Supabase dengan session timeout management.
+- Implementasi Row Level Security (RLS) di database sehingga data pengguna aman dan terisolasi.
+- Debounce protection pada sinkronisasi cloud untuk menghindari network overfetching.
+- Timeout otomatis dan recovery data dari storage lokal.
+- `.env.local` di-ignore oleh Git agar kredensial aman.

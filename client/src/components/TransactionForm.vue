@@ -2,24 +2,25 @@
 import { ref } from 'vue'
 import { useFinanceStore } from '../stores/finance'
 import { useToast } from '../composables/useToast'
+import { useCurrencyInput } from '../composables/useCurrencyInput'
 import { CATEGORIES } from '../constants/categories'
 
 const financeStore = useFinanceStore()
 const toast = useToast()
+const amountInput = useCurrencyInput()
 
 const title = ref('')
-const amount = ref<number | null>(null)
 const type = ref<'income' | 'expense'>('expense')
 const category = ref('')
 const date = ref(new Date().toISOString().split('T')[0])
 
 const submitTransaction = () => {
-  if (!title.value || !amount.value || !category.value || !date.value) {
+  if (!title.value || !amountInput.rawValue.value || !category.value || !date.value) {
     toast.warning('Mohon lengkapi semua data!')
     return
   }
 
-  if (amount.value <= 0) {
+  if (amountInput.rawValue.value <= 0) {
     toast.warning('Nominal harus lebih dari 0!')
     return
   }
@@ -27,7 +28,7 @@ const submitTransaction = () => {
   financeStore.addTransaction({
     id: crypto.randomUUID(),
     title: title.value.trim(),
-    amount: amount.value,
+    amount: amountInput.rawValue.value,
     type: type.value,
     category: category.value,
     date: date.value
@@ -36,7 +37,7 @@ const submitTransaction = () => {
   toast.success(`Transaksi "${title.value}" berhasil ditambahkan!`)
 
   title.value = ''
-  amount.value = null
+  amountInput.reset()
   category.value = ''
 }
 </script>
@@ -66,7 +67,10 @@ const submitTransaction = () => {
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Nominal (Rp)</label>
-          <input type="number" v-model="amount" placeholder="50000" min="1"
+          <input type="text" inputmode="numeric"
+                 :value="amountInput.displayValue.value"
+                 @input="amountInput.onInput"
+                 placeholder="50.000"
                  class="w-full p-2.5 border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-slate-700 dark:text-white">
         </div>
         <div>

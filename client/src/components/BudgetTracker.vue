@@ -4,12 +4,14 @@ import { useFinanceStore } from '../stores/finance'
 import { useBudgetStore } from '../stores/budget'
 import { CATEGORIES } from '../constants/categories'
 import { formatCurrency } from '../utils/format'
+import { AlertTriangle, Trash2 } from 'lucide-vue-next'
+import { useCurrencyInput } from '../composables/useCurrencyInput'
 
 const financeStore = useFinanceStore()
 const budgetStore = useBudgetStore()
+const budgetAmountInput = useCurrencyInput()
 
 const selectedCategory = ref('')
-const budgetAmount = ref<number | null>(null)
 
 const getCurrentMonth = () => {
   const now = new Date()
@@ -36,10 +38,10 @@ const currentMonthLabel = computed(() => {
 })
 
 const addBudget = () => {
-  if (!selectedCategory.value || !budgetAmount.value) return
-  budgetStore.setBudget(selectedCategory.value, budgetAmount.value)
+  if (!selectedCategory.value || !budgetAmountInput.rawValue.value) return
+  budgetStore.setBudget(selectedCategory.value, budgetAmountInput.rawValue.value)
   selectedCategory.value = ''
-  budgetAmount.value = null
+  budgetAmountInput.reset()
 }
 </script>
 
@@ -57,7 +59,10 @@ const addBudget = () => {
         <option disabled value="">Pilih Kategori...</option>
         <option v-for="cat in CATEGORIES" :key="cat" :value="cat">{{ cat }}</option>
       </select>
-      <input v-model.number="budgetAmount" type="number" placeholder="Limit (Rp)"
+      <input type="text" inputmode="numeric"
+             :value="budgetAmountInput.displayValue.value"
+             @input="budgetAmountInput.onInput"
+             placeholder="500.000"
              class="w-32 p-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
       <button @click="addBudget"
               class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors whitespace-nowrap">
@@ -80,9 +85,7 @@ const addBudget = () => {
             </span>
             <button @click="budgetStore.removeBudget(item.category)"
                     class="text-slate-400 hover:text-red-500 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-              </svg>
+              <Trash2 class="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
@@ -93,8 +96,8 @@ const addBudget = () => {
                :style="{ width: item.percentage + '%' }">
           </div>
         </div>
-        <p v-if="item.remaining < 0" class="text-xs text-red-500 font-medium">
-          ⚠️ Over budget {{ formatCurrency(Math.abs(item.remaining)) }}
+        <p v-if="item.remaining < 0" class="flex items-center gap-1 text-xs text-red-500 font-medium">
+          <AlertTriangle class="w-3.5 h-3.5" /> Over budget {{ formatCurrency(Math.abs(item.remaining)) }}
         </p>
         <p v-else class="text-xs text-slate-400 dark:text-slate-500">
           Sisa: {{ formatCurrency(item.remaining) }}

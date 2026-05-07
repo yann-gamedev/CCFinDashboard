@@ -1,17 +1,19 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRecurringStore, type RecurringTransaction } from '../stores/recurring'
+import { useRecurringStore } from '../stores/recurring'
 import { useToast } from '../composables/useToast'
 import { CATEGORIES } from '../constants/categories'
 import { formatCurrency } from '../utils/format'
+import { X, Plus, RefreshCw, Trash2 } from 'lucide-vue-next'
+import { useCurrencyInput } from '../composables/useCurrencyInput'
 
 const recurringStore = useRecurringStore()
 const toast = useToast()
+const amountInput = useCurrencyInput()
 
 const showForm = ref(false)
 const form = ref({
   title: '',
-  amount: null as number | null,
   type: 'expense' as 'income' | 'expense',
   category: '',
   frequency: 'monthly' as 'monthly' | 'weekly',
@@ -19,7 +21,7 @@ const form = ref({
 })
 
 const addItem = () => {
-  if (!form.value.title || !form.value.amount || !form.value.category) {
+  if (!form.value.title || !amountInput.rawValue.value || !form.value.category) {
     toast.warning('Lengkapi semua data!')
     return
   }
@@ -27,16 +29,17 @@ const addItem = () => {
   recurringStore.addRecurring({
     id: crypto.randomUUID(),
     title: form.value.title.trim(),
-    amount: form.value.amount,
+    amount: amountInput.rawValue.value,
     type: form.value.type,
     category: form.value.category,
     frequency: form.value.frequency,
-    nextDate: form.value.nextDate,
+    nextDate: form.value.nextDate!,
     enabled: true,
   })
 
   toast.success(`Transaksi berulang "${form.value.title}" ditambahkan!`)
-  form.value = { title: '', amount: null, type: 'expense', category: '', frequency: 'monthly', nextDate: new Date().toISOString().split('T')[0] }
+  form.value = { title: '', type: 'expense', category: '', frequency: 'monthly', nextDate: new Date().toISOString().split('T')[0] }
+  amountInput.reset()
   showForm.value = false
 }
 
@@ -56,9 +59,11 @@ const removeItem = (id: string) => {
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-lg font-bold text-slate-800 dark:text-white">Transaksi Berulang</h3>
       <button @click="showForm = !showForm"
-              class="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors"
+              class="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors"
               :class="showForm ? 'bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-200' : 'bg-blue-600 text-white hover:bg-blue-700'">
-        {{ showForm ? '✕ Tutup' : '+ Tambah' }}
+        <X v-if="showForm" class="w-3.5 h-3.5" />
+        <Plus v-else class="w-3.5 h-3.5" />
+        {{ showForm ? 'Tutup' : 'Tambah' }}
       </button>
     </div>
 
@@ -77,7 +82,10 @@ const removeItem = (id: string) => {
       <input v-model="form.title" type="text" placeholder="Judul (cth: Sewa Kos)"
              class="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
       <div class="grid grid-cols-2 gap-2">
-        <input v-model.number="form.amount" type="number" placeholder="Nominal" min="1"
+        <input type="text" inputmode="numeric"
+               :value="amountInput.displayValue.value"
+               @input="amountInput.onInput"
+               placeholder="50.000"
                class="p-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
         <select v-model="form.category"
                 class="p-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -127,7 +135,7 @@ const removeItem = (id: string) => {
                       ? (item.type === 'income' ? 'bg-green-100 dark:bg-green-900/30 text-green-600' : 'bg-red-100 dark:bg-red-900/30 text-red-500')
                       : 'bg-slate-100 dark:bg-slate-700 text-slate-400'"
                     :title="item.enabled ? 'Nonaktifkan' : 'Aktifkan'">
-              {{ item.type === 'income' ? '↻' : '↻' }}
+              <RefreshCw class="w-4 h-4" />
             </button>
             <div>
               <p class="font-semibold text-slate-800 dark:text-white text-sm">{{ item.title }}</p>
@@ -141,9 +149,7 @@ const removeItem = (id: string) => {
               {{ item.type === 'income' ? '+' : '-' }}{{ formatCurrency(item.amount) }}
             </span>
             <button @click="confirmDeleteId = item.id" class="text-slate-400 hover:text-red-500 transition-colors" title="Hapus">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-              </svg>
+              <Trash2 class="h-4 w-4" />
             </button>
           </div>
         </template>
